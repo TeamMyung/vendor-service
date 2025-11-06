@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:18
+    container_name: postgres-vendor
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: vendor_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - ./docker/db/postgresql:/var/lib/postgresql/18/docker
