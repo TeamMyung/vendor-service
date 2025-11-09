@@ -1,6 +1,6 @@
-package com.sparta.vendorservice.config;
+package com.sparta.vendorservice.global.response;
 
-import com.sparta.vendorservice.exception.ErrorCode;
+import com.sparta.vendorservice.global.exception.ErrorCode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
