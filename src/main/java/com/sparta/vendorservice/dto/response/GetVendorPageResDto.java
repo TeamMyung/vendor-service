@@ -16,14 +16,14 @@ public class GetVendorPageResDto {
     private String vendorName;
     private VendorType vendorType;
     private String vendorAddress;
-    private UUID hubId;
+    private String hubName;
 
     @QueryProjection
-    public GetVendorPageResDto(UUID vendorId, String vendorName, VendorType vendorType, String vendorAddress, UUID hubId) {
+    public GetVendorPageResDto(UUID vendorId, String vendorName, VendorType vendorType, String vendorAddress, String hubName) {
         this.vendorId = vendorId;
         this.vendorName = vendorName;
         this.vendorType = vendorType;
         this.vendorAddress = vendorAddress;
-        this.hubId = hubId;
+        this.hubName = hubName;
     }
 }

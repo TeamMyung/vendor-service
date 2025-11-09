@@ -28,20 +28,20 @@ public class Vendor extends BaseEntity {
     private VendorType vendorType;
 
     @Column(nullable = false)
-    private String hubAddress;
+    private String vendorAddress;
 
     @Column(nullable = false)
     private UUID hubId;
 
-    private Vendor(String vendorName, VendorType vendorType, String hubAddress, UUID hubId) {
+    private Vendor(String vendorName, VendorType vendorType, String vendorAddress, UUID hubId) {
         this.vendorName = vendorName;
         this.vendorType = vendorType;
-        this.hubAddress = hubAddress;
+        this.vendorAddress = vendorAddress;
         this.hubId = hubId;
     }
 
-    private static Vendor ofNewVendor(String vendorName, VendorType vendorType, String hubAddress, UUID hubId) {
-        return new Vendor(vendorName, vendorType, hubAddress, hubId);
+    private static Vendor ofNewVendor(String vendorName, VendorType vendorType, String vendorAddress, UUID hubId) {
+        return new Vendor(vendorName, vendorType, vendorAddress, hubId);
     }
 
 }

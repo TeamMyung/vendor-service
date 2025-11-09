@@ -18,7 +18,7 @@ public class GetVendorDetailResDto {
     private String vendorName;
     private VendorType vendorType;
     private String vendorAddress;
-    private UUID hubId;
+    private String hubName;
     private Long userId;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
@@ -26,12 +26,12 @@ public class GetVendorDetailResDto {
     private LocalDateTime updatedAt;
 
     @QueryProjection
-    public GetVendorDetailResDto(UUID vendorId, String vendorName,  VendorType vendorType, String vendorAddress, UUID hubId, Long userId, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public GetVendorDetailResDto(UUID vendorId, String vendorName, VendorType vendorType, String vendorAddress, String hubName, Long userId, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.vendorId = vendorId;
         this.vendorName = vendorName;
         this.vendorType = vendorType;
         this.vendorAddress = vendorAddress;
-        this.hubId = hubId;
+        this.hubName = hubName;
         this.userId = userId;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
