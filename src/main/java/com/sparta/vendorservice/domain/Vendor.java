@@ -1,5 +1,6 @@
 package com.sparta.vendorservice.domain;
 
+import com.sparta.vendorservice.dto.request.UpdateVendorReqDto;
 import com.sparta.vendorservice.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -40,8 +41,13 @@ public class Vendor extends BaseEntity {
         this.hubId = hubId;
     }
 
-    private static Vendor ofNewVendor(String vendorName, VendorType vendorType, String vendorAddress, UUID hubId) {
+    public static Vendor ofNewVendor(String vendorName, VendorType vendorType, String vendorAddress, UUID hubId) {
         return new Vendor(vendorName, vendorType, vendorAddress, hubId);
+    }
+
+    public void update(UpdateVendorReqDto request) {
+        if (request.getVendorAddress() != null) this.vendorAddress = request.getVendorAddress();
+        if (request.getVendorType() != null) this.vendorType = request.getVendorType();
     }
 
 }
