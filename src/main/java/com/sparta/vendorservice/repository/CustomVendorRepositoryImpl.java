@@ -54,7 +54,7 @@ public class CustomVendorRepositoryImpl implements CustomVendorRepository{
                 if (!ALLOWED_SORT_PROPERTIES.contains(order.getProperty())) {
                     continue;
                 }
-                PathBuilder<Vendor> entityPath = new PathBuilder<>(Vendor.class, "Vendor");
+                PathBuilder<Vendor> entityPath = new PathBuilder<>(Vendor.class, "vendor");
                 jpaQuery.orderBy(new OrderSpecifier(
                         order.isAscending() ? Order.ASC : Order.DESC,
                         entityPath.get(order.getProperty())
@@ -99,7 +99,7 @@ public class CustomVendorRepositoryImpl implements CustomVendorRepository{
                 qVendor.vendorName,
                 qVendor.vendorType,
                 qVendor.vendorAddress,
-                Expressions.constant("소속 허브명") // 수정 예정
+                qVendor.vendorName // 허브명으로 수정 예정
         );
     }
 
@@ -109,7 +109,7 @@ public class CustomVendorRepositoryImpl implements CustomVendorRepository{
                 qVendor.vendorName,
                 qVendor.vendorType,
                 qVendor.vendorAddress,
-                Expressions.constant("소속 허브명"), // 수정 예정
+                qVendor.vendorName , // 허브명으로 수정 예정
                 Expressions.constant(1L), // 수정 예정
                 qVendor.createdAt,
                 qVendor.updatedAt

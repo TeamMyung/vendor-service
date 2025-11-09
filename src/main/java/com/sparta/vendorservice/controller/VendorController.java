@@ -17,9 +17,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/v1/Vendors")
+@RequestMapping("/v1/vendors")
 @RequiredArgsConstructor
-public class VendorConrtoller {
+public class VendorController {
 
     private final VendorService vendorService;
 
@@ -31,12 +31,12 @@ public class VendorConrtoller {
     }
 
     // 업체 수정
-    @PutMapping("/{VendorId}")
+    @PutMapping("/{vendorId}")
     public ResponseEntity<ApiResponse<UpdateVendorResDto>> updateVendor(
-            @PathVariable UUID VendorId,
+            @PathVariable UUID vendorId,
             @RequestBody UpdateVendorReqDto request
     ) {
-        UpdateVendorResDto response = vendorService.updateVendor(VendorId, request);
+        UpdateVendorResDto response = vendorService.updateVendor(vendorId, request);
         return ResponseEntity.ok(new ApiResponse<>(response));
     }
 
@@ -60,9 +60,9 @@ public class VendorConrtoller {
     }
 
     // 업체 상세 조회
-    @GetMapping("/{VendorId}")
-    public ResponseEntity<ApiResponse<GetVendorDetailResDto>> getVendorDetail(@PathVariable UUID VendorId) {
-        GetVendorDetailResDto response = vendorService.getVendorDetail(VendorId);
+    @GetMapping("/{vendorId}")
+    public ResponseEntity<ApiResponse<GetVendorDetailResDto>> getVendorDetail(@PathVariable UUID vendorId) {
+        GetVendorDetailResDto response = vendorService.getVendorDetail(vendorId);
         return ResponseEntity.ok(new ApiResponse<>(response));
     }
 
