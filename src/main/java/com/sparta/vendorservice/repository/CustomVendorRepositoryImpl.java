@@ -78,7 +78,7 @@ public class CustomVendorRepositoryImpl implements CustomVendorRepository{
     public Optional<GetVendorDetailResDto> findVendorDetail(UUID vendorId) {
         GetVendorDetailResDto response = query.select(getVendorDetailProjection())
                 .from(qVendor)
-                .where(qVendor.hubId.eq(vendorId), qVendor.deletedAt.isNull())
+                .where(qVendor.vendorId.eq(vendorId), qVendor.deletedAt.isNull())
                 .fetchOne();
 
         return Optional.ofNullable(response);
