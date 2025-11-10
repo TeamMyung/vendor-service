@@ -1,6 +1,7 @@
 package com.sparta.vendorservice.service;
 
 import com.sparta.vendorservice.domain.Vendor;
+import com.sparta.vendorservice.dto.common.SearchParam;
 import com.sparta.vendorservice.dto.request.CreateVendorReqDto;
 import com.sparta.vendorservice.dto.request.DeleteVendorReqDto;
 import com.sparta.vendorservice.dto.request.UpdateVendorReqDto;
@@ -27,8 +28,8 @@ public class VendorService {
 
     // 업체 전체 조회
     @Transactional(readOnly = true)
-    public Page<GetVendorPageResDto> getVendorPage(String searchParam, Pageable pageable) {
-        return vendorRepository.findVendorPage(searchParam, pageable);
+    public Page<GetVendorPageResDto> getVendorPage(SearchParam searchParam, Pageable pageable, String role) {
+        return vendorRepository.findVendorPage(searchParam, pageable, role);
     }
 
     // 업체 상세 조회

@@ -1,5 +1,6 @@
 package com.sparta.vendorservice.controller;
 
+import com.sparta.vendorservice.dto.common.SearchParam;
 import com.sparta.vendorservice.dto.request.CreateVendorReqDto;
 import com.sparta.vendorservice.dto.request.DeleteVendorReqDto;
 import com.sparta.vendorservice.dto.request.UpdateVendorReqDto;
@@ -52,10 +53,11 @@ public class VendorController {
     // 업체 리스트 조회
     @GetMapping
     public ResponseEntity<ApiResponse<Page<GetVendorPageResDto>>> getVendorPage(
-            @RequestParam(required = false) String searchParam,
-            @PageableDefault(size = 10, sort = { "createdAt", "updatedAt" }, direction = Sort.Direction.ASC) Pageable pageable
+            @RequestParam(required = false) SearchParam searchParam,
+            @PageableDefault(size = 10, sort = { "createdAt", "updatedAt" }, direction = Sort.Direction.ASC) Pageable pageable,
+            @RequestParam String role
     ) {
-        Page<GetVendorPageResDto> response = vendorService.getVendorPage(searchParam, pageable);
+        Page<GetVendorPageResDto> response = vendorService.getVendorPage(searchParam, pageable, role);
         return ResponseEntity.ok(new ApiResponse<>(response));
     }
 

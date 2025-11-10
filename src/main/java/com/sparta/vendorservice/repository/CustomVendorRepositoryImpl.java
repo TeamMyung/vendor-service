@@ -9,6 +9,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.sparta.vendorservice.domain.QVendor;
 import com.sparta.vendorservice.domain.Vendor;
+import com.sparta.vendorservice.dto.common.SearchParam;
 import com.sparta.vendorservice.dto.response.GetVendorDetailResDto;
 import com.sparta.vendorservice.dto.response.GetVendorPageResDto;
 import com.sparta.vendorservice.dto.response.QGetVendorDetailResDto;
@@ -23,18 +24,18 @@ import org.springframework.data.support.PageableExecutionUtils;
 import java.util.*;
 
 @RequiredArgsConstructor
-public class CustomVendorRepositoryImpl implements CustomVendorRepository{
+public class CustomVendorRepositoryImpl implements CustomVendorRepository {
     // todo : 타 서비스와 연결 처리
-    
+
     private final JPAQueryFactory query;
 
     private static final Set<String> ALLOWED_SORT_PROPERTIES = Set.of(
-            "createdAt", "updatedAt", "vendorName",  "vendorAddress", "vendorType", "VendorName");
+            "createdAt", "updatedAt", "vendorName", "vendorAddress", "vendorType", "hubId");
 
     QVendor qVendor = QVendor.vendor;
 
     @Override
-    public Page<GetVendorPageResDto> findVendorPage(String searchParam, Pageable pageable) {
+    public Page<GetVendorPageResDto> findVendorPage(SearchParam searchParam, Pageable pageable, String role) {
         int pageSize = pageable.getPageSize();
         List<Integer> allowedPageSizes = Arrays.asList(10, 30, 50);
         if (!allowedPageSizes.contains(pageSize)) {
@@ -45,7 +46,7 @@ public class CustomVendorRepositoryImpl implements CustomVendorRepository{
 
         JPAQuery<GetVendorPageResDto> jpaQuery = query.select(getVendorProjection())
                 .from(qVendor)
-                .where(whereExpression(searchParam))
+                .where(whereExpression(searchParam, role))
                 .offset(adjustedPageable.getOffset())
                 .limit(adjustedPageable.getPageSize());
 
@@ -67,7 +68,7 @@ public class CustomVendorRepositoryImpl implements CustomVendorRepository{
         JPAQuery<Long> cnt = query
                 .select(qVendor.count())
                 .from(qVendor)
-                .where(whereExpression(searchParam));
+                .where(whereExpression(searchParam, role));
 
         List<GetVendorPageResDto> results = jpaQuery.fetch();
 
@@ -88,9 +89,9 @@ public class CustomVendorRepositoryImpl implements CustomVendorRepository{
     public boolean existsByVendorName(String vendorName) {
         Long exist = query.select(qVendor.count())
                 .from(qVendor)
-                .where(qVendor.vendorName.eq(vendorName),  qVendor.deletedAt.isNull())
+                .where(qVendor.vendorName.eq(vendorName), qVendor.deletedAt.isNull())
                 .fetchOne();
-        return exist != null && exist  > 0;
+        return exist != null && exist > 0;
     }
 
     private QGetVendorPageResDto getVendorProjection() {
@@ -103,31 +104,44 @@ public class CustomVendorRepositoryImpl implements CustomVendorRepository{
         );
     }
 
-    private QGetVendorDetailResDto  getVendorDetailProjection() {
+    private QGetVendorDetailResDto getVendorDetailProjection() {
         return new QGetVendorDetailResDto(
                 qVendor.vendorId,
                 qVendor.vendorName,
                 qVendor.vendorType,
                 qVendor.vendorAddress,
-                qVendor.vendorName , // 허브명으로 수정 예정
+                qVendor.vendorName, // 허브명으로 수정 예정
                 Expressions.constant(1L), // 수정 예정
                 qVendor.createdAt,
                 qVendor.updatedAt
         );
     }
 
-    private BooleanBuilder whereExpression(String searchParam) {
+    private BooleanBuilder whereExpression(SearchParam searchParam, String role) {
         BooleanBuilder booleanBuilder = new BooleanBuilder();
 
-        booleanBuilder.and(qVendor.deletedAt.isNull());
+        if (!"MASTER".equals(role)) {
+            // 마스터는 삭제된 것도 조회 가능
+            booleanBuilder.and(qVendor.deletedAt.isNull());
+        }
 
-        if(searchParam != null){
+        // 검색 조건
+        if (searchParam.getTerm() != null) {
             booleanBuilder.and(
-                    qVendor.vendorName.contains(searchParam)
-                            .or(qVendor.vendorAddress.contains(searchParam))
+                    qVendor.vendorName.containsIgnoreCase(searchParam.getTerm())
+                            .or(qVendor.vendorAddress.containsIgnoreCase(searchParam.getTerm()))
             );
         }
 
+        if (searchParam.getVendorType() != null) {
+            booleanBuilder.and(qVendor.vendorType.eq(searchParam.getVendorType()));
+        }
+
+        if (searchParam.getHubId() != null) {
+            booleanBuilder.and(qVendor.hubId.eq(searchParam.getHubId()));
+        }
+
         return booleanBuilder;
+
     }
 }
