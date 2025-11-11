@@ -27,19 +27,37 @@ public class VendorService {
     private final VendorRepository vendorRepository;
     private final HubClient hubClient;
 
-    // todo : 타 서비스와 연결 처리(유저, 허브)
+    // todo : 권한별 처리
 
     // 업체 전체 조회
     @Transactional(readOnly = true)
     public Page<GetVendorPageResDto> getVendorPage(SearchParam searchParam, Pageable pageable, String role) {
-        return vendorRepository.findVendorPage(searchParam, pageable, role);
+        Page<GetVendorPageResDto> page = vendorRepository.findVendorPage(searchParam, pageable, role);
+
+        // 허브 이름 매핑
+        page.getContent().forEach(vendor -> {
+            UUID hubId = vendorRepository.findHubIdByVendorId(vendor.getVendorId()).orElse(null);
+            String hubName = (hubId != null) ? hubClient.getHubName(hubId) : null;
+            vendor.setHubName(hubName);
+        });
+
+        return page;
     }
 
     // 업체 상세 조회
     @Transactional(readOnly = true)
-    public GetVendorDetailResDto getVendorDetail(UUID VendorId) {
-        return vendorRepository.findVendorDetail(VendorId)
+    public GetVendorDetailResDto getVendorDetail(UUID vendorId, String role) {
+        GetVendorDetailResDto vendorDetail = vendorRepository.findVendorDetail(vendorId, role)
                 .orElseThrow(() -> new VendorException(ErrorCode.VENDOR_NOT_FOUND));
+
+        // vendorId로 DB에서 hubId 조회 (없으면 null)
+        UUID hubId = vendorRepository.findHubIdByVendorId(vendorId).orElse(null);
+
+        // hubClient 호출 (hubId가 null이면 hubName도 null)
+        String hubName = (hubId != null) ? hubClient.getHubName(hubId) : null;
+        vendorDetail.setHubName(hubName);
+
+        return vendorDetail;
     }
 
     // 업체 생성

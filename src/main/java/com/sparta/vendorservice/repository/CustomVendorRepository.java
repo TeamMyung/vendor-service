@@ -14,7 +14,7 @@ public interface CustomVendorRepository {
     Page<GetVendorPageResDto> findVendorPage(SearchParam searchParam, Pageable pageable, String role);
 
     // 상세 정보 조회
-    Optional<GetVendorDetailResDto> findVendorDetail(UUID vendorId);
+    Optional<GetVendorDetailResDto> findVendorDetail(UUID vendorId, String role);
 
     // 업체 이름 중복 체크
     boolean existsByVendorName(String vendorName);

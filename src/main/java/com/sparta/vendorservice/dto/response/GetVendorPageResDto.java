@@ -5,10 +5,12 @@ import com.sparta.vendorservice.domain.VendorType;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.UUID;
 
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 public class GetVendorPageResDto {
@@ -24,6 +26,6 @@ public class GetVendorPageResDto {
         this.vendorName = vendorName;
         this.vendorType = vendorType;
         this.vendorAddress = vendorAddress;
-        this.hubName = hubName;
+        this.hubName = (hubName != null) ? hubName : "";
     }
 }

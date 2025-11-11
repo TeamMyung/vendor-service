@@ -10,4 +10,7 @@ import java.util.UUID;
 public interface HubClient {
     @GetMapping("/v1/hubs/api/{hubId}")
     boolean existsHub(@PathVariable("hubId") UUID hubId);
+
+    @GetMapping("/v1/hubs/api/{hubId}/name")
+    String getHubName(@PathVariable("hubId") UUID hubId);
 }

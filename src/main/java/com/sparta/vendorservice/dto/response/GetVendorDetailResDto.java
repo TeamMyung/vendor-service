@@ -6,11 +6,13 @@ import com.sparta.vendorservice.domain.VendorType;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 public class GetVendorDetailResDto {
@@ -31,7 +33,7 @@ public class GetVendorDetailResDto {
         this.vendorName = vendorName;
         this.vendorType = vendorType;
         this.vendorAddress = vendorAddress;
-        this.hubName = hubName;
+        this.hubName = (hubName != null) ? hubName : "";
         this.userId = userId;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
