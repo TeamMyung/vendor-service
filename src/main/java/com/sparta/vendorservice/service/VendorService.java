@@ -6,6 +6,9 @@ import com.sparta.vendorservice.dto.request.CreateVendorReqDto;
 import com.sparta.vendorservice.dto.request.DeleteVendorReqDto;
 import com.sparta.vendorservice.dto.request.UpdateVendorReqDto;
 import com.sparta.vendorservice.dto.response.*;
+import com.sparta.vendorservice.global.authz.Action;
+import com.sparta.vendorservice.global.authz.Authorize;
+import com.sparta.vendorservice.global.authz.Resource;
 import com.sparta.vendorservice.global.exception.ErrorCode;
 import com.sparta.vendorservice.global.exception.VendorException;
 import com.sparta.vendorservice.repository.VendorRepository;
@@ -28,12 +31,14 @@ public class VendorService {
 
     // 업체 전체 조회
     @Transactional(readOnly = true)
+    @Authorize(resource = Resource.VENDOR, action = Action.READ)
     public Page<GetVendorPageResDto> getVendorPage(SearchParam searchParam, Pageable pageable, String role) {
         return vendorRepository.findVendorPage(searchParam, pageable, role);
     }
 
     // 업체 상세 조회
     @Transactional(readOnly = true)
+    @Authorize(resource = Resource.VENDOR, action = Action.READ, targetVendorId = "#vendorId")
     public GetVendorDetailResDto getVendorDetail(UUID VendorId) {
         return vendorRepository.findVendorDetail(VendorId)
                 .orElseThrow(() -> new VendorException(ErrorCode.VENDOR_NOT_FOUND));
@@ -41,6 +46,7 @@ public class VendorService {
 
     // 업체 생성
     @Transactional
+    @Authorize(resource = Resource.VENDOR, action = Action.CREATE, targetHubId = "#request.hubId")
     public CreateVendorResDto createVendor(CreateVendorReqDto request) {
 
         if (vendorRepository.existsByVendorName(request.getVendorName())) {
@@ -66,6 +72,7 @@ public class VendorService {
 
     // 업체 수정
     @Transactional
+    @Authorize(resource = Resource.VENDOR, action = Action.UPDATE, targetVendorId = "#vendorId")
     public UpdateVendorResDto updateVendor(UUID vendorId, UpdateVendorReqDto request) {
         Vendor vendor = vendorRepository.findById(vendorId)
                 .orElseThrow(() -> new VendorException(ErrorCode.VENDOR_NOT_FOUND));
@@ -83,6 +90,7 @@ public class VendorService {
 
     // 업체 삭제
     @Transactional
+    @Authorize(resource = Resource.VENDOR, action = Action.DELETE, targetVendorId = "#request.vendorId")
     public DeleteVendorResDto deleteVendor(DeleteVendorReqDto request) {
 
         List<UUID> requestedIds = request.getVendorIds();
@@ -117,7 +125,6 @@ public class VendorService {
                 .message(message)
                 .build();
     }
-
 
 
 }
