@@ -6,6 +6,7 @@ import com.sparta.vendorservice.dto.request.CreateVendorReqDto;
 import com.sparta.vendorservice.dto.request.DeleteVendorReqDto;
 import com.sparta.vendorservice.dto.request.UpdateVendorReqDto;
 import com.sparta.vendorservice.dto.response.*;
+import com.sparta.vendorservice.global.client.HubClient;
 import com.sparta.vendorservice.global.exception.ErrorCode;
 import com.sparta.vendorservice.global.exception.VendorException;
 import com.sparta.vendorservice.repository.VendorRepository;
@@ -24,6 +25,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class VendorService {
     private final VendorRepository vendorRepository;
+    private final HubClient hubClient;
+
     // todo : 타 서비스와 연결 처리(유저, 허브)
 
     // 업체 전체 조회
@@ -42,6 +45,11 @@ public class VendorService {
     // 업체 생성
     @Transactional
     public CreateVendorResDto createVendor(CreateVendorReqDto request) {
+
+        // 허브 존재 여부 확인
+        if (!hubClient.existsHub(request.getHubId())) {
+            throw new VendorException(ErrorCode.HUB_NOT_FOUND);
+        }
 
         if (vendorRepository.existsByVendorName(request.getVendorName())) {
             throw new VendorException(ErrorCode.VENDOR_DUPLICATE_NAME);
@@ -67,6 +75,7 @@ public class VendorService {
     // 업체 수정
     @Transactional
     public UpdateVendorResDto updateVendor(UUID vendorId, UpdateVendorReqDto request) {
+
         Vendor vendor = vendorRepository.findById(vendorId)
                 .orElseThrow(() -> new VendorException(ErrorCode.VENDOR_NOT_FOUND));
 
@@ -117,6 +126,8 @@ public class VendorService {
                 .message(message)
                 .build();
     }
+
+
 
 
 
