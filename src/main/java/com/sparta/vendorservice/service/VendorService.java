@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -30,11 +31,9 @@ public class VendorService {
     private final VendorRepository vendorRepository;
     private final HubClient hubClient;
 
-    // todo : 권한별 처리
-
     // 업체 전체 조회
     @Transactional(readOnly = true)
-    @Authorize(resource = Resource.VENDOR, action = Action.READ)
+    //@Authorize(resource = Resource.VENDOR, action = Action.READ)
     public Page<GetVendorPageResDto> getVendorPage(SearchParam searchParam, Pageable pageable, String role) {
         Page<GetVendorPageResDto> page = vendorRepository.findVendorPage(searchParam, pageable, role);
 
@@ -50,7 +49,7 @@ public class VendorService {
 
     // 업체 상세 조회
     @Transactional(readOnly = true)
-    @Authorize(resource = Resource.VENDOR, action = Action.READ, targetVendorId = "#vendorId")
+    //@Authorize(resource = Resource.VENDOR, action = Action.READ, targetVendorId = "#vendorId")
     public GetVendorDetailResDto getVendorDetail(UUID vendorId, String role) {
         GetVendorDetailResDto vendorDetail = vendorRepository.findVendorDetail(vendorId, role)
                 .orElseThrow(() -> new VendorException(ErrorCode.VENDOR_NOT_FOUND));
@@ -67,8 +66,8 @@ public class VendorService {
 
     // 업체 생성
     @Transactional
-    @Authorize(resource = Resource.VENDOR, action = Action.CREATE, targetHubId = "#request.hubId")
-    public CreateVendorResDto createVendor(CreateVendorReqDto request) {
+    //@Authorize(resource = Resource.VENDOR, action = Action.CREATE, targetHubId = "#request.hubId")
+    public CreateVendorResDto createVendor(CreateVendorReqDto request, String role, Long userId, UUID hubId, UUID vendorId) {
 
         // 허브 존재 여부 확인
         if (!hubClient.existsHub(request.getHubId())) {
@@ -84,6 +83,10 @@ public class VendorService {
                 request.getVendorAddress(),
                 request.getHubId());
 
+        if (!hasPermission(vendor, role, hubId, vendorId, "CREATE")) {
+            throw new VendorException(ErrorCode.VENDOR_NOT_AUTH);
+        }
+
         vendorRepository.save(vendor);
 
         return new CreateVendorResDto(
@@ -92,17 +95,22 @@ public class VendorService {
                 vendor.getVendorType(),
                 vendor.getVendorAddress(),
                 vendor.getHubId(),
-                request.getUserId(),
+                userId,
                 vendor.getCreatedAt());
     }
 
     // 업체 수정
     @Transactional
-    @Authorize(resource = Resource.VENDOR, action = Action.UPDATE, targetVendorId = "#vendorId")
-    public UpdateVendorResDto updateVendor(UUID vendorId, UpdateVendorReqDto request) {
+    //@Authorize(resource = Resource.VENDOR, action = Action.UPDATE, targetVendorId = "#vendorId")
+    public UpdateVendorResDto updateVendor(UUID vendorId, UpdateVendorReqDto request, String role, Long userId, UUID hubId, UUID vendorIdHeader) {
 
         Vendor vendor = vendorRepository.findById(vendorId)
                 .orElseThrow(() -> new VendorException(ErrorCode.VENDOR_NOT_FOUND));
+
+
+        if (!hasPermission(vendor, role, hubId, vendorId, "UPDATE")) {
+            throw new VendorException(ErrorCode.VENDOR_NOT_AUTH);
+        }
 
         vendor.update(request);
         return new UpdateVendorResDto(
@@ -111,14 +119,14 @@ public class VendorService {
                 vendor.getVendorType(),
                 vendor.getVendorAddress(),
                 vendor.getHubId(),
-                request.getUserId(),
+                userId,
                 vendor.getUpdatedAt());
     }
 
     // 업체 삭제
     @Transactional
-    @Authorize(resource = Resource.VENDOR, action = Action.DELETE, targetVendorId = "#request.vendorId")
-    public DeleteVendorResDto deleteVendor(DeleteVendorReqDto request) {
+    //@Authorize(resource = Resource.VENDOR, action = Action.DELETE, targetVendorId = "#request.vendorId")
+    public DeleteVendorResDto deleteVendor(DeleteVendorReqDto request, String role, Long userId, UUID hubId, UUID vendorIdHeader) {
 
         List<UUID> requestedIds = request.getVendorIds();
         List<UUID> deletedIds = new ArrayList<>();
@@ -127,8 +135,11 @@ public class VendorService {
         for (UUID VendorId : requestedIds) {
             vendorRepository.findById(VendorId)
                     .ifPresentOrElse(Vendor -> {
+                        if (!hasPermission(Vendor, role, hubId, vendorIdHeader, "DELETE")) {
+                            throw new VendorException(ErrorCode.VENDOR_NOT_AUTH);
+                        }
                         if (Vendor.getDeletedAt() == null) {
-                            Vendor.delete(1L); // 수정 예정
+                            Vendor.delete(userId); // 수정 예정
                             vendorRepository.save(Vendor);
                             deletedIds.add(Vendor.getVendorId());
 
@@ -151,5 +162,17 @@ public class VendorService {
                 .vendorIds(deletedIds)
                 .message(message)
                 .build();
+    }
+
+    // 권한 체크
+    private boolean hasPermission(Vendor vendor, String role, UUID hubId, UUID vendorId, String action) {
+        boolean isAdmin = role.equals("MASTER");
+        boolean isVendorManager = false;
+        if (action.equals("UPDATE")) {
+            isVendorManager = role.equals("VENDOR_MANAGER") && Objects.equals(vendor.getVendorId(), vendorId);
+        }
+        boolean isHubManager = role.equals("HUB_MANAGER") && Objects.equals(vendor.getHubId(), hubId);
+
+        return isAdmin || isHubManager || isVendorManager;
     }
 }

@@ -14,6 +14,7 @@ public enum ErrorCode {
     VENDOR_NOT_FOUND(4001, HttpStatus.NOT_FOUND, "존재하지 않는 업체입니다."),
     VENDOR_DUPLICATE_NAME(4002, HttpStatus.INTERNAL_SERVER_ERROR, "중복된 업체 이름입니다."),
     HUB_NOT_FOUND(4003, HttpStatus.NOT_FOUND, "존재하지 않는 허브입니다."),
+    VENDOR_NOT_AUTH(4004, HttpStatus.UNAUTHORIZED, "업체 데이터 생성/수정/삭제 권한이 없습니다."),
     ;
 
     private final int code;
