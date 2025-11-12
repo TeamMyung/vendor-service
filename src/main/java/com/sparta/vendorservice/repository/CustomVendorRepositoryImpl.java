@@ -76,10 +76,15 @@ public class CustomVendorRepositoryImpl implements CustomVendorRepository {
     }
 
     @Override
-    public Optional<GetVendorDetailResDto> findVendorDetail(UUID vendorId) {
-        GetVendorDetailResDto response = query.select(getVendorDetailProjection())
+    public Optional<GetVendorDetailResDto> findVendorDetail(UUID vendorId, String role) {
+        GetVendorDetailResDto response = query
+                .select(getVendorDetailProjection())
                 .from(qVendor)
-                .where(qVendor.vendorId.eq(vendorId), qVendor.deletedAt.isNull())
+                .where(
+                        "MASTER".equals(role)
+                                ? qVendor.vendorId.eq(vendorId)
+                                : qVendor.vendorId.eq(vendorId).and(qVendor.deletedAt.isNull())
+                )
                 .fetchOne();
 
         return Optional.ofNullable(response);
@@ -100,7 +105,7 @@ public class CustomVendorRepositoryImpl implements CustomVendorRepository {
                 qVendor.vendorName,
                 qVendor.vendorType,
                 qVendor.vendorAddress,
-                qVendor.vendorName // 허브명으로 수정 예정
+                Expressions.nullExpression() // 허브명 서비스에서 받아오기
         );
     }
 
@@ -110,7 +115,7 @@ public class CustomVendorRepositoryImpl implements CustomVendorRepository {
                 qVendor.vendorName,
                 qVendor.vendorType,
                 qVendor.vendorAddress,
-                qVendor.vendorName, // 허브명으로 수정 예정
+                Expressions.nullExpression(), // 허브명 서비스에서 받아오기
                 Expressions.constant(1L), // 수정 예정
                 qVendor.createdAt,
                 qVendor.updatedAt

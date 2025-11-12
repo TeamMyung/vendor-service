@@ -9,6 +9,7 @@ import com.sparta.vendorservice.dto.response.*;
 import com.sparta.vendorservice.global.authz.Action;
 import com.sparta.vendorservice.global.authz.Authorize;
 import com.sparta.vendorservice.global.authz.Resource;
+import com.sparta.vendorservice.global.client.HubClient;
 import com.sparta.vendorservice.global.exception.ErrorCode;
 import com.sparta.vendorservice.global.exception.VendorException;
 import com.sparta.vendorservice.repository.VendorRepository;
@@ -27,27 +28,52 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class VendorService {
     private final VendorRepository vendorRepository;
-    // todo : 타 서비스와 연결 처리(유저, 허브)
+    private final HubClient hubClient;
+
+    // todo : 권한별 처리
 
     // 업체 전체 조회
     @Transactional(readOnly = true)
     @Authorize(resource = Resource.VENDOR, action = Action.READ)
     public Page<GetVendorPageResDto> getVendorPage(SearchParam searchParam, Pageable pageable, String role) {
-        return vendorRepository.findVendorPage(searchParam, pageable, role);
+        Page<GetVendorPageResDto> page = vendorRepository.findVendorPage(searchParam, pageable, role);
+
+        // 허브 이름 매핑
+        page.getContent().forEach(vendor -> {
+            UUID hubId = vendorRepository.findHubIdByVendorId(vendor.getVendorId()).orElse(null);
+            String hubName = (hubId != null) ? hubClient.getHubName(hubId) : null;
+            vendor.setHubName(hubName);
+        });
+
+        return page;
     }
 
     // 업체 상세 조회
     @Transactional(readOnly = true)
     @Authorize(resource = Resource.VENDOR, action = Action.READ, targetVendorId = "#vendorId")
-    public GetVendorDetailResDto getVendorDetail(UUID VendorId) {
-        return vendorRepository.findVendorDetail(VendorId)
+    public GetVendorDetailResDto getVendorDetail(UUID vendorId, String role) {
+        GetVendorDetailResDto vendorDetail = vendorRepository.findVendorDetail(vendorId, role)
                 .orElseThrow(() -> new VendorException(ErrorCode.VENDOR_NOT_FOUND));
+
+        // vendorId로 DB에서 hubId 조회 (없으면 null)
+        UUID hubId = vendorRepository.findHubIdByVendorId(vendorId).orElse(null);
+
+        // hubClient 호출 (hubId가 null이면 hubName도 null)
+        String hubName = (hubId != null) ? hubClient.getHubName(hubId) : null;
+        vendorDetail.setHubName(hubName);
+
+        return vendorDetail;
     }
 
     // 업체 생성
     @Transactional
     @Authorize(resource = Resource.VENDOR, action = Action.CREATE, targetHubId = "#request.hubId")
     public CreateVendorResDto createVendor(CreateVendorReqDto request) {
+
+        // 허브 존재 여부 확인
+        if (!hubClient.existsHub(request.getHubId())) {
+            throw new VendorException(ErrorCode.HUB_NOT_FOUND);
+        }
 
         if (vendorRepository.existsByVendorName(request.getVendorName())) {
             throw new VendorException(ErrorCode.VENDOR_DUPLICATE_NAME);
@@ -74,6 +100,7 @@ public class VendorService {
     @Transactional
     @Authorize(resource = Resource.VENDOR, action = Action.UPDATE, targetVendorId = "#vendorId")
     public UpdateVendorResDto updateVendor(UUID vendorId, UpdateVendorReqDto request) {
+
         Vendor vendor = vendorRepository.findById(vendorId)
                 .orElseThrow(() -> new VendorException(ErrorCode.VENDOR_NOT_FOUND));
 
@@ -125,6 +152,4 @@ public class VendorService {
                 .message(message)
                 .build();
     }
-
-
 }

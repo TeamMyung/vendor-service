@@ -1,5 +1,6 @@
 package com.sparta.vendorservice.controller;
 
+import com.sparta.vendorservice.domain.VendorType;
 import com.sparta.vendorservice.dto.common.SearchParam;
 import com.sparta.vendorservice.dto.request.CreateVendorReqDto;
 import com.sparta.vendorservice.dto.request.DeleteVendorReqDto;
@@ -53,18 +54,20 @@ public class VendorController {
     // 업체 리스트 조회
     @GetMapping
     public ResponseEntity<ApiResponse<Page<GetVendorPageResDto>>> getVendorPage(
-            @RequestParam(required = false) SearchParam searchParam,
-            @PageableDefault(size = 10, sort = { "createdAt", "updatedAt" }, direction = Sort.Direction.ASC) Pageable pageable,
-            @RequestParam String role
-    ) {
-        Page<GetVendorPageResDto> response = vendorService.getVendorPage(searchParam, pageable, role);
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) UUID hubId,
+            @RequestParam(required = false) VendorType vendorType,
+            @PageableDefault(size = 10, sort = { "createdAt", "updatedAt" }, direction = Sort.Direction.ASC) Pageable pageable)
+     {
+         SearchParam searchParam = new SearchParam(search, hubId, vendorType);
+        Page<GetVendorPageResDto> response = vendorService.getVendorPage(searchParam, pageable, "MASTER"); // 임시
         return ResponseEntity.ok(new ApiResponse<>(response));
     }
 
     // 업체 상세 조회
     @GetMapping("/{vendorId}")
     public ResponseEntity<ApiResponse<GetVendorDetailResDto>> getVendorDetail(@PathVariable UUID vendorId) {
-        GetVendorDetailResDto response = vendorService.getVendorDetail(vendorId);
+        GetVendorDetailResDto response = vendorService.getVendorDetail(vendorId, "MASTER"); // 임시
         return ResponseEntity.ok(new ApiResponse<>(response));
     }
 
