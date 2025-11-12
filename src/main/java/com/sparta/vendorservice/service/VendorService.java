@@ -6,6 +6,9 @@ import com.sparta.vendorservice.dto.request.CreateVendorReqDto;
 import com.sparta.vendorservice.dto.request.DeleteVendorReqDto;
 import com.sparta.vendorservice.dto.request.UpdateVendorReqDto;
 import com.sparta.vendorservice.dto.response.*;
+import com.sparta.vendorservice.global.authz.Action;
+import com.sparta.vendorservice.global.authz.Authorize;
+import com.sparta.vendorservice.global.authz.Resource;
 import com.sparta.vendorservice.global.client.HubClient;
 import com.sparta.vendorservice.global.exception.ErrorCode;
 import com.sparta.vendorservice.global.exception.VendorException;
@@ -31,6 +34,7 @@ public class VendorService {
 
     // 업체 전체 조회
     @Transactional(readOnly = true)
+    @Authorize(resource = Resource.VENDOR, action = Action.READ)
     public Page<GetVendorPageResDto> getVendorPage(SearchParam searchParam, Pageable pageable, String role) {
         Page<GetVendorPageResDto> page = vendorRepository.findVendorPage(searchParam, pageable, role);
 
@@ -46,6 +50,7 @@ public class VendorService {
 
     // 업체 상세 조회
     @Transactional(readOnly = true)
+    @Authorize(resource = Resource.VENDOR, action = Action.READ, targetVendorId = "#vendorId")
     public GetVendorDetailResDto getVendorDetail(UUID vendorId, String role) {
         GetVendorDetailResDto vendorDetail = vendorRepository.findVendorDetail(vendorId, role)
                 .orElseThrow(() -> new VendorException(ErrorCode.VENDOR_NOT_FOUND));
@@ -62,6 +67,7 @@ public class VendorService {
 
     // 업체 생성
     @Transactional
+    @Authorize(resource = Resource.VENDOR, action = Action.CREATE, targetHubId = "#request.hubId")
     public CreateVendorResDto createVendor(CreateVendorReqDto request) {
 
         // 허브 존재 여부 확인
@@ -92,6 +98,7 @@ public class VendorService {
 
     // 업체 수정
     @Transactional
+    @Authorize(resource = Resource.VENDOR, action = Action.UPDATE, targetVendorId = "#vendorId")
     public UpdateVendorResDto updateVendor(UUID vendorId, UpdateVendorReqDto request) {
 
         Vendor vendor = vendorRepository.findById(vendorId)
@@ -110,6 +117,7 @@ public class VendorService {
 
     // 업체 삭제
     @Transactional
+    @Authorize(resource = Resource.VENDOR, action = Action.DELETE, targetVendorId = "#request.vendorId")
     public DeleteVendorResDto deleteVendor(DeleteVendorReqDto request) {
 
         List<UUID> requestedIds = request.getVendorIds();
@@ -144,9 +152,4 @@ public class VendorService {
                 .message(message)
                 .build();
     }
-
-
-
-
-
 }
