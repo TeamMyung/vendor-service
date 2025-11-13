@@ -28,10 +28,10 @@ public class VendorController {
     // 업체 추가
     @PostMapping
     public ResponseEntity<ApiResponse<CreateVendorResDto>> createVendor(@RequestBody CreateVendorReqDto request,
-                                                                        @RequestHeader(value = "role") String role,
-                                                                        @RequestHeader(value = "user_id") String userIdHeader,
-                                                                        @RequestHeader(value = "hub_id", required = false)String hubIdHeader,
-                                                                        @RequestHeader(value = "vendor_id", required = false) String vendorIdHeader) {
+                                                                        @RequestHeader(value = "x-role") String role,
+                                                                        @RequestHeader(value = "x-userid") String userIdHeader,
+                                                                        @RequestHeader(value = "x-hub-id", required = false)String hubIdHeader,
+                                                                        @RequestHeader(value = "x-vendor-id", required = false) String vendorIdHeader) {
         Long userId = Long.parseLong(userIdHeader);
         // 허브/벤더 헤더가 존재하면 UUID로 변환, 없으면 null
         UUID hubId = (hubIdHeader != null && !hubIdHeader.isBlank()) ? UUID.fromString(hubIdHeader) : null;
@@ -45,10 +45,10 @@ public class VendorController {
     public ResponseEntity<ApiResponse<UpdateVendorResDto>> updateVendor(
             @PathVariable UUID vendorId,
             @RequestBody UpdateVendorReqDto request,
-            @RequestHeader(value = "role") String role,
-            @RequestHeader(value = "user_id") String userIdHeader,
-            @RequestHeader(value = "hub_id", required = false)String hubIdHeader,
-            @RequestHeader(value = "vendor_id", required = false) String vendorIdHeader
+            @RequestHeader(value = "x-role") String role,
+            @RequestHeader(value = "x-userid") String userIdHeader,
+            @RequestHeader(value = "x-hub-id", required = false)String hubIdHeader,
+            @RequestHeader(value = "x-vendor-id", required = false) String vendorIdHeader
     ) {
         Long userId = Long.parseLong(userIdHeader);
         // 허브/벤더 헤더가 존재하면 UUID로 변환, 없으면 null
@@ -62,10 +62,10 @@ public class VendorController {
     @DeleteMapping
     public ResponseEntity<ApiResponse<DeleteVendorResDto>> deleteVendor(
             @RequestBody DeleteVendorReqDto request,
-            @RequestHeader(value = "role") String role,
-            @RequestHeader(value = "user_id") String userIdHeader,
-            @RequestHeader(value = "hub_id", required = false)String hubIdHeader,
-            @RequestHeader(value = "vendor_id", required = false) String vendorIdHeader
+            @RequestHeader(value = "x-role") String role,
+            @RequestHeader(value = "x-userid") String userIdHeader,
+            @RequestHeader(value = "x-hub-id", required = false)String hubIdHeader,
+            @RequestHeader(value = "x-vendor-id", required = false) String vendorIdHeader
     ) {
         Long userId = Long.parseLong(userIdHeader);
         // 허브/벤더 헤더가 존재하면 UUID로 변환, 없으면 null
@@ -82,7 +82,7 @@ public class VendorController {
             @RequestParam(required = false) UUID hubId,
             @RequestParam(required = false) VendorType vendorType,
             @PageableDefault(size = 10, sort = { "createdAt", "updatedAt" }, direction = Sort.Direction.ASC) Pageable pageable,
-            @RequestHeader(value = "role") String role)
+            @RequestHeader(value = "x-role") String role)
      {
          SearchParam searchParam = new SearchParam(search, hubId, vendorType);
         Page<GetVendorPageResDto> response = vendorService.getVendorPage(searchParam, pageable, role); // 임시
@@ -92,7 +92,7 @@ public class VendorController {
     // 업체 상세 조회
     @GetMapping("/{vendorId}")
     public ResponseEntity<ApiResponse<GetVendorDetailResDto>> getVendorDetail(@PathVariable UUID vendorId,
-                                                                              @RequestHeader(value = "role") String role) {
+                                                                              @RequestHeader(value = "x-role") String role) {
         GetVendorDetailResDto response = vendorService.getVendorDetail(vendorId, role); // 임시
         return ResponseEntity.ok(new ApiResponse<>(response));
     }
