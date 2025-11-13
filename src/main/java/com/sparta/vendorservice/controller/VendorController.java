@@ -14,8 +14,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -29,13 +32,12 @@ public class VendorController {
     @PostMapping
     public ResponseEntity<ApiResponse<CreateVendorResDto>> createVendor(@RequestBody CreateVendorReqDto request,
                                                                         @RequestHeader(value = "x-role") String role,
-                                                                        @RequestHeader(value = "x-userid") String userIdHeader,
-                                                                        @RequestHeader(value = "x-hub-id", required = false)String hubIdHeader,
-                                                                        @RequestHeader(value = "x-vendor-id", required = false) String vendorIdHeader) {
+                                                                        @RequestHeader(value = "x-userid") String userIdHeader) {
         Long userId = Long.parseLong(userIdHeader);
-        // 허브/벤더 헤더가 존재하면 UUID로 변환, 없으면 null
-        UUID hubId = (hubIdHeader != null && !hubIdHeader.isBlank()) ? UUID.fromString(hubIdHeader) : null;
-        UUID vendorId = (vendorIdHeader != null && !vendorIdHeader.isBlank()) ? UUID.fromString(vendorIdHeader) : null;
+        UUID hubId = getHubIdFromAuth();
+        UUID vendorId = getVendorIdFromAuth();
+        System.out.println(hubId);
+        System.out.println(vendorId);
         CreateVendorResDto response = vendorService.createVendor(request, role, userId, hubId, vendorId);
         return ResponseEntity.ok(new ApiResponse<>(response));
     }
@@ -46,14 +48,10 @@ public class VendorController {
             @PathVariable UUID vendorId,
             @RequestBody UpdateVendorReqDto request,
             @RequestHeader(value = "x-role") String role,
-            @RequestHeader(value = "x-userid") String userIdHeader,
-            @RequestHeader(value = "x-hub-id", required = false)String hubIdHeader,
-            @RequestHeader(value = "x-vendor-id", required = false) String vendorIdHeader
-    ) {
+            @RequestHeader(value = "x-userid") String userIdHeader) {
         Long userId = Long.parseLong(userIdHeader);
-        // 허브/벤더 헤더가 존재하면 UUID로 변환, 없으면 null
-        UUID hubId = (hubIdHeader != null && !hubIdHeader.isBlank()) ? UUID.fromString(hubIdHeader) : null;
-        UUID vendorIdHd = (vendorIdHeader != null && !vendorIdHeader.isBlank()) ? UUID.fromString(vendorIdHeader) : null;
+        UUID hubId = getHubIdFromAuth();
+        UUID vendorIdHd = getVendorIdFromAuth();
         UpdateVendorResDto response = vendorService.updateVendor(vendorId, request, role, userId, hubId, vendorIdHd);
         return ResponseEntity.ok(new ApiResponse<>(response));
     }
@@ -63,15 +61,11 @@ public class VendorController {
     public ResponseEntity<ApiResponse<DeleteVendorResDto>> deleteVendor(
             @RequestBody DeleteVendorReqDto request,
             @RequestHeader(value = "x-role") String role,
-            @RequestHeader(value = "x-userid") String userIdHeader,
-            @RequestHeader(value = "x-hub-id", required = false)String hubIdHeader,
-            @RequestHeader(value = "x-vendor-id", required = false) String vendorIdHeader
-    ) {
+            @RequestHeader(value = "x-userid") String userIdHeader) {
         Long userId = Long.parseLong(userIdHeader);
-        // 허브/벤더 헤더가 존재하면 UUID로 변환, 없으면 null
-        UUID hubId = (hubIdHeader != null && !hubIdHeader.isBlank()) ? UUID.fromString(hubIdHeader) : null;
-        UUID vendorId = (vendorIdHeader != null && !vendorIdHeader.isBlank()) ? UUID.fromString(vendorIdHeader) : null;
-        DeleteVendorResDto response = vendorService.deleteVendor(request, role, userId, hubId, vendorId);
+        UUID hubId = getHubIdFromAuth();
+        UUID vendorIdHd = getVendorIdFromAuth();
+        DeleteVendorResDto response = vendorService.deleteVendor(request, role, userId, hubId, vendorIdHd);
         return ResponseEntity.ok(new ApiResponse<>(response));
     }
 
@@ -96,5 +90,30 @@ public class VendorController {
         GetVendorDetailResDto response = vendorService.getVendorDetail(vendorId, role); // 임시
         return ResponseEntity.ok(new ApiResponse<>(response));
     }
+
+    private UUID getHubIdFromAuth() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return null;
+
+        Object principal = auth.getPrincipal();
+        if (principal instanceof Map<?, ?> map) {
+            return (UUID) map.get("hubId");
+        }
+        return null;
+    }
+
+    private UUID getVendorIdFromAuth() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return null;
+
+        Object principal = auth.getPrincipal();
+        if (principal instanceof Map<?, ?> map) {
+            return (UUID) map.get("vendorId");
+        }
+        return null;
+    }
+
+
+
 
 }

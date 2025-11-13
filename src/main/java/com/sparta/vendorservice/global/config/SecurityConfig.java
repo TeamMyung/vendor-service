@@ -10,13 +10,14 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.*;
 
 @Configuration
 public class SecurityConfig {
@@ -35,18 +36,36 @@ public class SecurityConfig {
 
     public static class HeaderAuthFilter extends OncePerRequestFilter {
         @Override
-        protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
-                throws ServletException, IOException {
+        protected void doFilterInternal(HttpServletRequest request,
+                                        HttpServletResponse response,
+                                        FilterChain filterChain) throws ServletException, IOException {
 
-            String user = req.getHeader("x-user-id");
-            String role = req.getHeader("x-role");
+            String hubIdHeader = request.getHeader("x-hub-id");
+            String vendorIdHeader = request.getHeader("x-vendor-id");
 
-            if (user != null && role != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                var auth = new UsernamePasswordAuthenticationToken(
-                        user, null, List.of(new SimpleGrantedAuthority("ROLE_" + role)));
-                SecurityContextHolder.getContext().setAuthentication(auth);
+            Map<String, Object> principalMap = new HashMap<>();
+
+            if (hubIdHeader != null && !hubIdHeader.isBlank()) {
+                principalMap.put("hubId", UUID.fromString(hubIdHeader));
             }
-            chain.doFilter(req, res);
+            if (vendorIdHeader != null && !vendorIdHeader.isBlank()) {
+                principalMap.put("vendorId", UUID.fromString(vendorIdHeader));
+            }
+
+            if (!principalMap.isEmpty()) {
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(
+                                principalMap,
+                                null,
+                                Collections.emptyList()
+                        );
+
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+            }
+
+            filterChain.doFilter(request, response);
         }
+
     }
+
 }

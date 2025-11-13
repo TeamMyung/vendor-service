@@ -108,7 +108,7 @@ public class VendorService {
                 .orElseThrow(() -> new VendorException(ErrorCode.VENDOR_NOT_FOUND));
 
 
-        if (!hasPermission(vendor, role, hubId, vendorId, "UPDATE")) {
+        if (!hasPermission(vendor, role, hubId, vendorIdHeader, "UPDATE")) {
             throw new VendorException(ErrorCode.VENDOR_NOT_AUTH);
         }
 
@@ -166,13 +166,21 @@ public class VendorService {
 
     // 권한 체크
     private boolean hasPermission(Vendor vendor, String role, UUID hubId, UUID vendorId, String action) {
-        boolean isAdmin = role.equals("MASTER");
-        boolean isVendorManager = false;
-        if (action.equals("UPDATE")) {
-            isVendorManager = role.equals("VENDOR_MANAGER") && Objects.equals(vendor.getVendorId(), vendorId);
+        boolean isAdmin = "MASTER".equals(role);
+        boolean isVendorManager = "VENDOR_MANAGER".equals(role)
+                && Objects.equals(vendor.getVendorId(), vendorId);
+        boolean isHubManager = "HUB_MANAGER".equals(role)
+                && Objects.equals(vendor.getHubId(), hubId);
+        switch (action) {
+            case "CREATE":
+            case "DELETE":
+                // CREATE/DELETE는 MASTER와 자기 허브 HUB_MANAGER만 가능, VENDOR_MANAGER 불가
+                return isAdmin || isHubManager;
+            case "UPDATE":
+                // UPDATE는 MASTER, 자기 허브 HUB_MANAGER, 자기 업체 VENDOR_MANAGER 가능
+                return isAdmin || isHubManager || isVendorManager;
+            default:
+                return false;
         }
-        boolean isHubManager = role.equals("HUB_MANAGER") && Objects.equals(vendor.getHubId(), hubId);
-
-        return isAdmin || isHubManager || isVendorManager;
     }
 }
